@@ -49,15 +49,21 @@ pipeline {
             }
         }
 
-        stage('Apply / Destroy') {
+        stage('Apply / Destroy auto-approve') {
+            when {
+                expression { params.autoApprove }
+            }
             steps {
-                script {
-                    if (params.autoApprove) {
-                        sh 'terraform ${params.action} -auto-approve tfplan'
-                    } else {
-                        sh 'terraform ${params.action} tfplan'
-                    }
-                }
+                sh 'terraform ${params.action} -auto-approve tfplan'
+            }
+        }
+
+        stage('Apply / Destroy !auto-approve') {
+            when {
+                expression { params.autoApprove == false }
+            }
+            steps {
+                sh 'terraform ${params.action} tfplan'
             }
         }
     }
