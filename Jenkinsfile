@@ -20,6 +20,10 @@ pipeline {
     environment {
         // Git configuration
         GIT_DEPTH = '0'
+        TF_VAR_project_id_var = credentials('TF_VAR_project_id_var')
+        TF_VAR_application_secret_var = credentials('TF_VAR_application_secret_var')
+        TF_VAR_consumer_key_var = credentials('TF_VAR_consumer_key_var')
+        TF_VAR_application_key_var = = credentials('TF_VAR_application_key_var')
     }
 
     stages {
