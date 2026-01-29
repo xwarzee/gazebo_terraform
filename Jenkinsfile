@@ -1,0 +1,46 @@
+pipeline {
+    agent any
+
+parameters {
+booleanParam(name: 'autoApprove’, defaultValue: false, description: 'Automatically run apply after generating plan?’)
+choice(name: 'action’, choices: ['apply’, 'destroy’], description: 'Select the action to perform’)
+}
+    options {
+        // Keep builds for 30 days
+        buildDiscarder(logRotator(daysToKeepStr: '30'))
+        // Timeout after 2 hours
+        timeout(time: 2, unit: 'HOURS')
+        // Disable concurrent builds
+        disableConcurrentBuilds()
+        // Enable timestamps in console output
+        timestamps()
+    }
+
+    environment {
+        // Git configuration
+        GIT_DEPTH = '0'
+    }
+
+    stages {
+
+    stage('Terraform init’) {
+        steps {
+            sh 'terraform init’
+        }
+    }
+
+    stage('Plan’) {
+        steps {
+            sh 'terraform plan -out tfplan’
+            sh 'terraform show -no-color tfplan > tfplan.txt’
+        }
+    }
+
+    stage('Apply / Destroy’) {
+        steps {
+            script {
+                sh 'terraform apply — auto-approve’
+            }
+        }
+    }
+}
