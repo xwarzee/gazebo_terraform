@@ -52,7 +52,7 @@ pipeline {
         stage('Apply / Destroy') {
             steps {
                 script {
-                    if (autoApproveValue) {
+                    if (${params.autoApprove}) {
                         sh '''
                             terraform ${params.action} -auto-approve tfplan
                         '''
