@@ -25,21 +25,23 @@ choice(name: 'action', choices: ['apply', 'destroy'], description: 'Select the a
 
     stage('Terraform init') {
         steps {
-            sh 'terraform init’
+            sh '''terraform init'''
         }
     }
 
     stage('Plan') {
         steps {
-            sh 'terraform plan -out tfplan'
-            sh 'terraform show -no-color tfplan > tfplan.txt'
+            sh '''
+                terraform plan -out tfplan
+                terraform show -no-color tfplan > tfplan.txt
+            '''
         }
     }
 
     stage('Apply / Destroy') {
         steps {
             script {
-                sh 'terraform apply — auto-approve'
+                sh '''terraform apply — auto-approve'''
             }
         }
     }
