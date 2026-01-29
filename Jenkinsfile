@@ -71,7 +71,7 @@ pipeline {
 
         stage('Destroy auto-approve') {
             when {
-                expression { params.autoApprove && params.action == "apply"}
+                expression { params.autoApprove && params.action == "destroy"}
             }
             steps {
                 sh '''
@@ -82,7 +82,7 @@ pipeline {
 
         stage('Destroy !auto-approve') {
             when {
-                expression { params.autoApprove == false && params.action == "apply" }
+                expression { params.autoApprove == false && params.action == "destroy" }
             }
             steps {
                 sh 'terraform destroy'
