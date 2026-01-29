@@ -52,7 +52,7 @@ data "ovh_cloud_project_flavors" "l4_flavor" {
   region       = "GRA11"
 }
 
-
+/*
 output "available_flavors" {
   value = [for flavor in data.ovh_cloud_project_flavors.l4_flavor.flavors : {
     name = flavor.name
@@ -60,7 +60,7 @@ output "available_flavors" {
     type = flavor.type
   }]
 }
-
+*/
 
 
 locals {
