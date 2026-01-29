@@ -49,7 +49,7 @@ pipeline {
             }
         }
 
-        stage('Apply / Destroy auto-approve') {
+        stage('Apply auto-approve') {
             when {
                 expression { params.autoApprove && params.action == "apply"}
             }
@@ -60,12 +60,32 @@ pipeline {
             }
         }
 
-        stage('Apply / Destroy !auto-approve') {
+        stage('Apply !auto-approve') {
             when {
                 expression { params.autoApprove == false && params.action == "apply" }
             }
             steps {
                 sh 'terraform apply tfplan'
+            }
+        }
+
+        stage('Destroy auto-approve') {
+            when {
+                expression { params.autoApprove && params.action == "apply"}
+            }
+            steps {
+                sh '''
+                    terraform destroy -auto-approve 
+                '''
+            }
+        }
+
+        stage('Destroy !auto-approve') {
+            when {
+                expression { params.autoApprove == false && params.action == "apply" }
+            }
+            steps {
+                sh 'terraform destroy'
             }
         }
     }
