@@ -55,7 +55,8 @@ pipeline {
                     sh '''
                         if (params.autoApprove) {
                             terraform ${params.action} -auto-approve tfplan
-                        } else {
+                        } 
+                        else {
                             terraform ${params.action} tfplan
                         }
                     '''
