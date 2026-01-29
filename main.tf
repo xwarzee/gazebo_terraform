@@ -67,7 +67,7 @@ locals {
   # On récupère l'ID de l'image Ubuntu 22.04
   ubuntu_id = [for img in data.ovh_cloud_project_images.ubuntu_latest.images : img.id if img.name == "Ubuntu 22.04"][0]
 
-  # On récupère l'ID du flavor g2-7-l4 (on cherche un flavor contenant "l4" ou "L4" dans le nom)
+  # On récupère l'ID du flavor l4-90 (on cherche un flavor contenant "l4-90")
   l4_flavor_id = try(
     [for flavor in data.ovh_cloud_project_flavors.l4_flavor.flavors : flavor.id if flavor.name == "l4-90"][0],
     null
