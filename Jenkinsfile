@@ -51,14 +51,17 @@ pipeline {
 
         stage('Apply / Destroy') {
             steps {
-                if (params.autoApprove) {
-                    sh '''
-                        terraform ${params.action} -auto-approve tfplan
-                    '''
-                } else {
-                    sh '''
-                        terraform ${params.action} tfplan
-                    '''
+                script {
+                    def autoApproveValue = params.autoApprove
+                    if (autoApproveValue) {
+                        sh '''
+                            terraform ${params.action} -auto-approve tfplan
+                        '''
+                    } else {
+                        sh '''
+                            terraform ${params.action} tfplan
+                        '''
+                    }
                 }
             }
         }
