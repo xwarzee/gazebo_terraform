@@ -78,7 +78,7 @@ locals {
 resource "ovh_cloud_project_ssh_key" "my_key" {
   service_name = var.project_id_var # projet Gazebo 
   name         = "gezabo_key"
-  public_key   = file("${path.module}/../../.ssh/id_ecdsa.pub")
+  public_key   = file("${path.module}/id_ecdsa.pub")
 }
 
 # 2. Création de l'instance GPU L4
