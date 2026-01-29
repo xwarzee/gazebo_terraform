@@ -53,7 +53,7 @@ pipeline {
             steps {
                 script {
                     sh '''
-                        if (params.autoApprove) 
+                        if ${params.autoApprove}
                         then
                             terraform ${params.action} -auto-approve tfplan
                         else
