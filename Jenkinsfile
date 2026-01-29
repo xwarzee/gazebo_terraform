@@ -51,19 +51,21 @@ pipeline {
 
         stage('Apply / Destroy auto-approve') {
             when {
-                expression { params.autoApprove }
+                expression { params.autoApprove && params.action == "apply"}
             }
             steps {
-                sh 'terraform ${params.action} -auto-approve tfplan'
+                sh '''
+                    terraform apply -auto-approve tfplan
+                '''
             }
         }
 
         stage('Apply / Destroy !auto-approve') {
             when {
-                expression { params.autoApprove == false }
+                expression { params.autoApprove == false && params.action == "apply" }
             }
             steps {
-                sh 'terraform ${params.action} tfplan'
+                sh 'terraform apply tfplan'
             }
         }
     }
