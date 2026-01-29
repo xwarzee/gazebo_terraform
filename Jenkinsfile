@@ -24,33 +24,34 @@ pipeline {
 
     stages {
 
-    stage('Terraform init') {
-        steps {
-            script {
-                sh '''
-                    terraform init
-                '''
+        stage('Terraform init') {
+            steps {
+                script {
+                    sh '''
+                        terraform init
+                    '''
+                }
             }
         }
-    }
 
-    stage('Plan') {
-        steps {
-            script {
-                sh '''
-                    terraform plan -out tfplan
-                    terraform show -no-color tfplan > tfplan.txt
-                '''
+        stage('Plan') {
+            steps {
+                script {
+                    sh '''
+                        terraform plan -out tfplan
+                        terraform show -no-color tfplan > tfplan.txt
+                    '''
+                }
             }
         }
-    }
 
-    stage('Apply / Destroy') {
-        steps {
-            script {
-                sh '''
-                    terraform apply — auto-approve
-                '''
+        stage('Apply / Destroy') {
+            steps {
+                script {
+                    sh '''
+                        terraform apply — auto-approve
+                    '''
+                }
             }
         }
     }
