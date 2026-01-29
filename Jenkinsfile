@@ -2,8 +2,8 @@ pipeline {
     agent any
 
 parameters {
-booleanParam(name: 'autoApprove’, defaultValue: false, description: 'Automatically run apply after generating plan?’)
-choice(name: 'action’, choices: ['apply’, 'destroy’], description: 'Select the action to perform’)
+booleanParam(name: 'autoApprove', defaultValue: false, description: 'Automatically run apply after generating plan?')
+choice(name: 'action', choices: ['apply', 'destroy'], description: 'Select the action to perform')
 }
     options {
         // Keep builds for 30 days
@@ -23,23 +23,23 @@ choice(name: 'action’, choices: ['apply’, 'destroy’], description: 'Select
 
     stages {
 
-    stage('Terraform init’) {
+    stage('Terraform init') {
         steps {
             sh 'terraform init’
         }
     }
 
-    stage('Plan’) {
+    stage('Plan') {
         steps {
-            sh 'terraform plan -out tfplan’
-            sh 'terraform show -no-color tfplan > tfplan.txt’
+            sh 'terraform plan -out tfplan'
+            sh 'terraform show -no-color tfplan > tfplan.txt'
         }
     }
 
-    stage('Apply / Destroy’) {
+    stage('Apply / Destroy') {
         steps {
             script {
-                sh 'terraform apply — auto-approve’
+                sh 'terraform apply — auto-approve'
             }
         }
     }
