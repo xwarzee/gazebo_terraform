@@ -52,8 +52,7 @@ pipeline {
         stage('Apply / Destroy') {
             steps {
                 script {
-                    def autoApproveValue = params.autoApprove
-                    if (autoApproveValue) {
+                    if (${autoApproveValue}) {
                         sh '''
                             terraform ${params.action} -auto-approve tfplan
                         '''
