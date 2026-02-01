@@ -129,7 +129,9 @@ resource "ovh_cloud_project_instance" "gazebo_instance" {
               sudo ufw allow 22/tcp
               sudo ufw allow 4000/tcp
               sudo ufw allow 8092/tcp
-              sudo ufw enable
+              # sudo ufw enable
+              # ufw disable to use ign gazebo
+              sudo ufw disable
               # install CMake and compilers
               apt-get install -y \
                 cmake \
