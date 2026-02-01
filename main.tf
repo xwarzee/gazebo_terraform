@@ -125,7 +125,8 @@ resource "ovh_cloud_project_instance" "gazebo_instance" {
               apt-get install -y xfce4 xfce4-goodies dbus-x11
               wget https://download.nomachine.com/download/9.3/Linux/nomachine_9.3.7_1_amd64.deb    
               sudo dpkg -i nomachine_9.3.7_1_amd64.deb                                         
-              sudo apt-get install -f -y  
+              sudo apt-get install -f -y
+              sudo ufw allow 22/tcp
               sudo ufw allow 4000/tcp
               sudo ufw allow 8092/tcp
               sudo ufw enable
