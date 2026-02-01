@@ -114,12 +114,29 @@ resource "ovh_cloud_project_instance" "gazebo_instance" {
               ubuntu-drivers install
               apt-get update
               apt-get install -y lsb-release gnupg
-              curl https://packages.osrfoundation.org/gazebo.gpg --output /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg
-              echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/pkgs-osrf-archive-keyring.gpg] https://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/gazebo-stable.list > /dev/null
+              curl https://packages.osrfoundation.org/gazebo.gpg \
+                --output /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg
+              echo "deb [arch=$(dpkg --print-architecture) \
+                signed-by=/usr/share/keyrings/pkgs-osrf-archive-keyring.gpg] \
+                https://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" | \
+                sudo tee /etc/apt/sources.list.d/gazebo-stable.list > /dev/null
               apt-get update
               apt-get install -y ignition-fortress
-              apt-get install -y tigervnc-standalone-server tigervnc-common
-              apt-get install -y xfce4 xfce4-goodies
+              apt-get install -y xfce4 xfce4-goodies dbus-x11
+              wget https://download.nomachine.com/download/9.3/Linux/nomachine_9.3.7_1_amd64.deb    
+              sudo dpkg -i nomachine_9.3.7_1_amd64.deb                                         
+              sudo apt-get install -f -y  
+              sudo ufw allow 4000/tcp
+              sudo ufw allow 8092/tcp
+              sudo ufw enable
+              # install CMake and compilers
+              apt-get install -y \
+                cmake \
+                g++ \
+                make \
+                libignition-gazebo7-dev \
+                libignition-transport12-dev \
+                git
               reboot
               EOF
 }
