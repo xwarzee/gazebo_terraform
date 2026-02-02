@@ -103,7 +103,7 @@ resource "ovh_cloud_project_instance" "gazebo_instance" {
 
   # 2. Spécification du réseau public
   network {
-    public = true
+    public = false
   }
 
   # Installation auto des drivers NVIDIA
@@ -113,7 +113,7 @@ resource "ovh_cloud_project_instance" "gazebo_instance" {
               apt-get install -y ubuntu-drivers-common
               ubuntu-drivers install
               apt-get update
-              apt-get install -y lsb-release gnupg
+              apt-get install -y wget curl lsb-release gnupg
               curl https://packages.osrfoundation.org/gazebo.gpg \
                 --output /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg
               echo "deb [arch=$(dpkg --print-architecture) \
@@ -121,7 +121,12 @@ resource "ovh_cloud_project_instance" "gazebo_instance" {
                 https://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" | \
                 sudo tee /etc/apt/sources.list.d/gazebo-stable.list > /dev/null
               apt-get update
-              apt-get install -y ignition-fortress
+              apt-get install -y ignition-fortress 
+              # For ignition-fortress, check https://github.com/gazebosim/gz-fortress/blob/main/CMakeLists.txt
+              apt-get install -y \
+                libignition-gazebo6-dev \
+                libignition-transport11-dev \
+                libignition-math6-dev
               apt-get install -y xfce4 xfce4-goodies dbus-x11
               wget https://download.nomachine.com/download/9.3/Linux/nomachine_9.3.7_1_amd64.deb    
               sudo dpkg -i nomachine_9.3.7_1_amd64.deb                                         
@@ -137,8 +142,6 @@ resource "ovh_cloud_project_instance" "gazebo_instance" {
                 cmake \
                 g++ \
                 make \
-                libignition-gazebo7-dev \
-                libignition-transport12-dev \
                 git
               reboot
               EOF
