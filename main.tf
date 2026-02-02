@@ -2,6 +2,7 @@ terraform {
   required_providers {
     ovh = {
       source = "ovh/ovh"
+      version = ">= 2.3.0"  # Required for floating_ip fix
     }
   }
 }
@@ -81,11 +82,7 @@ resource "ovh_cloud_project_ssh_key" "my_key" {
   public_key   = file("${path.module}/id_ed25519.pub")
 }
 
-# Recherche du network_id
-data "ovh_cloud_project_network_public" "public" {
-  project_id = var.project_id_var
-  region     = "GRA11"
-}
+# Note: Public network doesn't require a data source lookup
 
 # 🔹 IP PUBLIQUE RÉSERVÉE
 resource "ovh_cloud_project_ip" "fip" {
@@ -117,18 +114,13 @@ resource "ovh_cloud_project_instance" "gazebo_instance" {
     image_id = local.ubuntu_id
   }
 
-  # 2. Spécification du réseau 
- 
-  network_interface {
-    network_id = data.ovh_cloud_project_network_public.public.id
-    ip_id      = ovh_cloud_project_ip.fip.id
-  }
-
-/*
+  # 2. Spécification du réseau avec IP flottante réutilisable
   network {
-    public = false
+    public = true
+    floating_ip {
+      id = ovh_cloud_project_ip.fip.id
+    }
   }
-*/
 
   # Installation auto des drivers NVIDIA
   user_data = <<-EOF
