@@ -81,6 +81,22 @@ resource "ovh_cloud_project_ssh_key" "my_key" {
   public_key   = file("${path.module}/id_ed25519.pub")
 }
 
+# Recherche du network_id
+data "ovh_cloud_project_network_public" "public" {
+  project_id = var.project_id_var
+  region     = "GRA11"
+}
+
+# 🔹 IP PUBLIQUE RÉSERVÉE
+resource "ovh_cloud_project_ip" "fip" {
+  project_id = var.project_id_var
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
+
 # 2. Création de l'instance GPU L4
 resource "ovh_cloud_project_instance" "gazebo_instance" {
   service_name = var.project_id_var
@@ -101,10 +117,18 @@ resource "ovh_cloud_project_instance" "gazebo_instance" {
     image_id = local.ubuntu_id
   }
 
-  # 2. Spécification du réseau public
+  # 2. Spécification du réseau 
+ 
+  network_interface {
+    network_id = data.ovh_cloud_project_network_public.public.id
+    ip_id      = ovh_cloud_project_ip.fip.id
+  }
+
+/*
   network {
     public = false
   }
+*/
 
   # Installation auto des drivers NVIDIA
   user_data = <<-EOF
