@@ -4,7 +4,6 @@ pipeline {
     parameters {
         booleanParam(name: 'autoApprove', defaultValue: false, description: 'Automatically run apply after generating plan?')
         choice(name: 'action', choices: ['apply', 'destroy'], description: 'Select the action to perform')
-        string(name: 'IP_ADDRESS_GAZEBO_SERVER', defaultValue: '', description: 'IP address of the Gazebo server')
     }
     
     options {
@@ -80,10 +79,6 @@ pipeline {
                         -target=ovh_cloud_project_gateway.gateway \
                         -target=ovh_cloud_project_instance.gazebo_instance --auto-approve
                     terraform apply -auto-approve
-                    scp id_ed25519_nomachine.pub ubuntu@${params.IP_ADDRESS_GAZEBO_SERVER}:/home/ubuntu/.ssh/id_ed25519_nomachine_client.pub
-                    ssh ubuntu@${params.IP_ADDRESS_GAZEBO_SERVER} 'mkdir -p /home/ubuntu/.nx/config'
-                    ssh ubuntu@${params.IP_ADDRESS_GAZEBO_SERVER} 'cat /home/ubuntu/.ssh/id_ed25519_nomachine_client.pub >> /home/ubuntu/.nx/config/authorized.crt'
-                    ssh ubuntu@${params.IP_ADDRESS_GAZEBO_SERVER} 'chmod 0600 /home/ubuntu/.nx/config/authorized.crt'
                 """
             }
         }
