@@ -20,10 +20,25 @@ pipeline {
     environment {
         // Git configuration
         GIT_DEPTH = '0'
+
+        // OVH/Terraform API credentials
         TF_VAR_project_id_var = credentials('TF_VAR_project_id_var')
         TF_VAR_application_secret_var = credentials('TF_VAR_application_secret_var')
         TF_VAR_consumer_key_var = credentials('TF_VAR_consumer_key_var')
         TF_VAR_application_key_var = credentials('TF_VAR_application_key_var')
+
+        // OpenStack credentials (sensitive)
+        OS_USERNAME = credentials('OS_USERNAME')
+        OS_PASSWORD = credentials('OS_PASSWORD')
+        OS_TENANT_ID = credentials('OS_TENANT_ID')
+
+        // OpenStack configuration (non-sensitive)
+        OS_AUTH_URL = 'https://auth.cloud.ovh.net/v3'
+        OS_IDENTITY_API_VERSION = '3'
+        OS_USER_DOMAIN_NAME = 'Default'
+        OS_PROJECT_DOMAIN_NAME = 'Default'
+        OS_TENANT_NAME = '9376721598096746'
+        OS_REGION_NAME = 'GRA11'
     }
 
     stages {
