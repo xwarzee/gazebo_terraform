@@ -176,8 +176,33 @@ resource "ovh_cloud_project_instance" "gazebo_instance" {
 
   depends_on = [
     ovh_cloud_project_gateway.gateway,
-    ovh_cloud_project_network_private_subnet.private_subnet
+    ovh_cloud_project_network_private_subnet.private_subnet,
+    openstack_networking_floatingip_associate_v2.fip_associate
   ]
+
+  # Configuration de la connexion SSH pour les provisioners
+  connection {
+    type        = "ssh"
+    user        = "ubuntu"
+    host        = openstack_networking_floatingip_v2.fip.address
+    private_key = file("${path.module}/id_ed25519")
+    timeout     = "5m"
+  }
+
+  # Copie de la clé publique NoMachine vers le serveur
+  provisioner "file" {
+    source      = "${path.module}/id_ed25519_nomachine.pub"
+    destination = "/home/ubuntu/.ssh/id_ed25519_nomachine_client.pub"
+  }
+
+  # Configuration de NoMachine avec la clé publique
+  provisioner "remote-exec" {
+    inline = [
+      "mkdir -p /home/ubuntu/.nx/config",
+      "cat /home/ubuntu/.ssh/id_ed25519_nomachine_client.pub >> /home/ubuntu/.nx/config/authorized.crt",
+      "chmod 0600 /home/ubuntu/.nx/config/authorized.crt"
+    ]
+  }
 
   # Mise à jour DNS
   # Installation auto des drivers NVIDIA
