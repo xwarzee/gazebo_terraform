@@ -39,6 +39,9 @@ pipeline {
         }
 
         stage('Plan') {
+            when {
+                expression { params.autoApprove == false }
+            }
             steps {
                 script {
                     sh '''
@@ -55,7 +58,12 @@ pipeline {
             }
             steps {
                 sh '''
-                    terraform apply -auto-approve tfplan
+                    terraform apply \
+                        -target=ovh_cloud_project_network_private.private_net \
+                        -target=ovh_cloud_project_network_private_subnet.private_subnet \
+                        -target=ovh_cloud_project_gateway.gateway \
+                        -target=ovh_cloud_project_instance.gazebo_instance --auto-approve
+                    terraform apply -auto-approve
                 '''
             }
         }
@@ -75,7 +83,12 @@ pipeline {
             }
             steps {
                 sh '''
-                    terraform destroy -auto-approve 
+                    terraform destroy \
+                        -target=openstack_networking_floatingip_associate_v2.fip_associate \
+                        -target=ovh_cloud_project_instance.gazebo_instance \
+                        -target=ovh_cloud_project_gateway.gateway \
+                        -target=ovh_cloud_project_network_private_subnet.private_subnet \
+                        -target=ovh_cloud_project_network_private.private_net --auto-approve
                 '''
             }
         }
