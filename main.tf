@@ -179,16 +179,24 @@ resource "ovh_cloud_project_instance" "gazebo_instance" {
     ovh_cloud_project_network_private_subnet.private_subnet
   ]
 
+  # Mise à jour DNS
   # Installation auto des drivers NVIDIA
+  # Installation Gazebo Fortress et outils de compilation pour le plugin C++ (bridge REST pour l'app UAV)
   user_data = <<-EOF
               #!/bin/bash
-              # Configuration des serveurs DNS
-              echo "nameserver 8.8.8.8" > /etc/resolv.conf
-              echo "nameserver 8.8.4.4" >> /etc/resolv.conf
-              echo "nameserver 1.1.1.1" >> /etc/resolv.conf
+              # Configuration persistante des DNS via systemd-resolved
+              mkdir -p /etc/systemd/resolved.conf.d
+              cat > /etc/systemd/resolved.conf.d/dns.conf <<'DNSCONF'
+[Resolve]
+DNS=8.8.8.8 8.8.4.4 1.1.1.1
+FallbackDNS=1.0.0.1
+DNSCONF
 
-              # Empêcher le DHCP de remplacer resolv.conf
-              chattr +i /etc/resolv.conf
+              # Redémarrer systemd-resolved pour appliquer les changements
+              systemctl restart systemd-resolved
+
+              # Attendre que le DNS soit opérationnel
+              sleep 5
 
               apt-get update
               apt-get install -y ubuntu-drivers-common
