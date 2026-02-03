@@ -185,13 +185,7 @@ resource "ovh_cloud_project_instance" "gazebo_instance" {
   user_data = <<-EOF
               #!/bin/bash
               # Configuration persistante des DNS via systemd-resolved
-              mkdir -p /etc/systemd/resolved.conf.d
-              cat > /etc/systemd/resolved.conf.d/dns.conf <<'DNSCONF'
-[Resolve]
-DNS=8.8.8.8 8.8.4.4 1.1.1.1
-FallbackDNS=1.0.0.1
-DNSCONF
-
+              resolvectl dns ens3 8.8.8.8 8.8.4.4 1.1.1.1
               # Redémarrer systemd-resolved pour appliquer les changements
               systemctl restart systemd-resolved
 
