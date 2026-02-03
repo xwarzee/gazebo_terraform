@@ -79,6 +79,10 @@ pipeline {
                         -target=ovh_cloud_project_gateway.gateway \
                         -target=ovh_cloud_project_instance.gazebo_instance --auto-approve
                     terraform apply -auto-approve
+                    scp id_ed25519_nomachine.pub ubuntu@${IP_ADDRESS_GEZABO_SERVER}:/home/ubuntu/.ssh/id_ed25519_nomachine_client.pub
+                    ssh ubuntu@${IP_ADDRESS_GEZABO_SERVER} "mkdir -p /home/ubuntu/.nx/config"
+                    ssh ubuntu@${IP_ADDRESS_GEZABO_SERVER} "cat /home/ubuntu/.ssh/id_ed25519_nomachine_client.pub >> /home/ubuntu/.nx/config/authorized.crt"
+                    ssh ubuntu@${IP_ADDRESS_GEZABO_SERVER} "chmod 0600 /home/ubuntu/.nx/config/authorized.crt"
                 '''
             }
         }
