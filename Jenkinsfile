@@ -88,14 +88,12 @@ pipeline {
                         # Attendre que le serveur soit accessible
                         sleep 30
 
-                        # Options SSH avec clé privée
-                        export SSH_OPTIONS="-i \${SSH_KEY} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
-
-                        ssh \${SSH_OPTIONS} ubuntu@${params.IP_ADDRESS_GAZEBO_SERVER} 'mkdir -p /home/ubuntu/.ssh'
-                        scp \${SSH_OPTIONS} id_ed25519_nomachine.pub ubuntu@${params.IP_ADDRESS_GAZEBO_SERVER}:/home/ubuntu/.ssh/id_ed25519_nomachine_client.pub
-                        ssh \${SSH_OPTIONS} ubuntu@${params.IP_ADDRESS_GAZEBO_SERVER} 'mkdir -p /home/ubuntu/.nx/config'
-                        ssh \${SSH_OPTIONS} ubuntu@${params.IP_ADDRESS_GAZEBO_SERVER} 'cat /home/ubuntu/.ssh/id_ed25519_nomachine_client.pub >> /home/ubuntu/.nx/config/authorized.crt'
-                        ssh \${SSH_OPTIONS} ubuntu@${params.IP_ADDRESS_GAZEBO_SERVER} 'chmod 0600 /home/ubuntu/.nx/config/authorized.crt'
+                        # Configuration NoMachine
+                        ssh -i "\${SSH_KEY}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@${params.IP_ADDRESS_GAZEBO_SERVER} 'mkdir -p /home/ubuntu/.ssh'
+                        scp -i "\${SSH_KEY}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null id_ed25519_nomachine.pub ubuntu@${params.IP_ADDRESS_GAZEBO_SERVER}:/home/ubuntu/.ssh/id_ed25519_nomachine_client.pub
+                        ssh -i "\${SSH_KEY}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@${params.IP_ADDRESS_GAZEBO_SERVER} 'mkdir -p /home/ubuntu/.nx/config'
+                        ssh -i "\${SSH_KEY}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@${params.IP_ADDRESS_GAZEBO_SERVER} 'cat /home/ubuntu/.ssh/id_ed25519_nomachine_client.pub >> /home/ubuntu/.nx/config/authorized.crt'
+                        ssh -i "\${SSH_KEY}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@${params.IP_ADDRESS_GAZEBO_SERVER} 'chmod 0600 /home/ubuntu/.nx/config/authorized.crt'
                     """
                 }
             }
