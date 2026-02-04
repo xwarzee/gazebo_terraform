@@ -85,8 +85,25 @@ pipeline {
                 // Configuration NoMachine avec la clé SSH
                 withCredentials([sshUserPrivateKey(credentialsId: 'gazebo_ssh_key', keyFileVariable: 'SSH_KEY')]) {
                     sh """
-                        # Attendre que le serveur soit accessible
-                        sleep 30
+                        # Attendre que le serveur SSH soit accessible (max 10 minutes)
+                        echo "Attente que le serveur soit accessible..."
+                        MAX_RETRIES=60
+                        RETRY_COUNT=0
+
+                        while [ \$RETRY_COUNT -lt \$MAX_RETRIES ]; do
+                            if ssh -i "\${SSH_KEY}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=5 ubuntu@${params.IP_ADDRESS_GAZEBO_SERVER} 'exit' 2>/dev/null; then
+                                echo "Serveur accessible !"
+                                break
+                            fi
+                            RETRY_COUNT=\$((RETRY_COUNT + 1))
+                            echo "Tentative \$RETRY_COUNT/\$MAX_RETRIES - En attente du serveur..."
+                            sleep 10
+                        done
+
+                        if [ \$RETRY_COUNT -eq \$MAX_RETRIES ]; then
+                            echo "Erreur: Le serveur n'est pas accessible après 10 minutes"
+                            exit 1
+                        fi
 
                         # Configuration NoMachine
                         ssh -i "\${SSH_KEY}" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@${params.IP_ADDRESS_GAZEBO_SERVER} 'mkdir -p /home/ubuntu/.ssh'
