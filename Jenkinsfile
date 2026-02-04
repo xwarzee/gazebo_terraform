@@ -82,13 +82,13 @@ pipeline {
                 """
 
                 // Configuration NoMachine avec la clé SSH
-                sshagent(credentials: ['gazebo_ssh_key']) {
+                withCredentials([sshUserPrivateKey(credentialsId: 'gazebo_ssh_key', keyFileVariable: 'SSH_KEY')]) {
                     sh """
                         # Attendre que le serveur soit accessible
                         sleep 30
 
-                        # Désactiver la vérification stricte des clés d'hôte pour la première connexion
-                        export SSH_OPTIONS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+                        # Options SSH avec clé privée
+                        export SSH_OPTIONS="-i \${SSH_KEY} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
 
                         scp \${SSH_OPTIONS} id_ed25519_nomachine.pub ubuntu@${params.IP_ADDRESS_GAZEBO_SERVER}:/home/ubuntu/.ssh/id_ed25519_nomachine_client.pub
                         ssh \${SSH_OPTIONS} ubuntu@${params.IP_ADDRESS_GAZEBO_SERVER} 'mkdir -p /home/ubuntu/.nx/config'
