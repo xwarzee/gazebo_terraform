@@ -91,6 +91,7 @@ pipeline {
                         # Options SSH avec clé privée
                         export SSH_OPTIONS="-i \${SSH_KEY} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
 
+                        ssh \${SSH_OPTIONS} ubuntu@${params.IP_ADDRESS_GAZEBO_SERVER} 'mkdir -p /home/ubuntu/.ssh'
                         scp \${SSH_OPTIONS} id_ed25519_nomachine.pub ubuntu@${params.IP_ADDRESS_GAZEBO_SERVER}:/home/ubuntu/.ssh/id_ed25519_nomachine_client.pub
                         ssh \${SSH_OPTIONS} ubuntu@${params.IP_ADDRESS_GAZEBO_SERVER} 'mkdir -p /home/ubuntu/.nx/config'
                         ssh \${SSH_OPTIONS} ubuntu@${params.IP_ADDRESS_GAZEBO_SERVER} 'cat /home/ubuntu/.ssh/id_ed25519_nomachine_client.pub >> /home/ubuntu/.nx/config/authorized.crt'
