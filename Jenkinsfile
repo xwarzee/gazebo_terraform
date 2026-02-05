@@ -4,7 +4,7 @@ pipeline {
     parameters {
         booleanParam(name: 'autoApprove', defaultValue: false, description: 'Automatically run apply after generating plan?')
         choice(name: 'action', choices: ['apply', 'destroy'], description: 'Select the action to perform')
-        string(name: 'IP_ADDRESS_GAZEBO_SERVER', defaultValue: '', description: 'IP address of the Gazebo server')
+        string(name: 'IP_ADDRESS_GAZEBO_SERVER', defaultValue: params.IP_ADDRESS_GAZEBO_SERVER ?: '127.0.0.1', description: 'IP address of the Gazebo server')
     }
     
     options {
