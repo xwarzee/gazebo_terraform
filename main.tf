@@ -309,11 +309,46 @@ DNSCONF
 
               # ===== CONFIGURATION FIREWALL =====
               log "Configuration firewall..."
+
+              # Ports SSH et services
               sudo ufw allow 22/tcp
-              sudo ufw allow 4000/tcp
-              sudo ufw allow 8092/tcp
-              sudo ufw disable
-              log "Firewall désactivé pour Gazebo"
+              sudo ufw allow 4000/tcp    # NoMachine
+              sudo ufw allow 8092/tcp    # Application custom
+
+              # Ports Gazebo Fortress / Ignition Transport
+              sudo ufw allow 11345/tcp   # Ignition Transport discovery
+              sudo ufw allow 11345/udp   # Ignition Transport discovery (UDP)
+              sudo ufw allow 11346:11355/tcp  # Ignition Transport communication range
+              sudo ufw allow 11346:11355/udp  # Ignition Transport communication range (UDP)
+
+              # Autoriser tout le trafic sur localhost (nécessaire pour Gazebo)
+              sudo ufw allow in on lo
+              sudo ufw allow out on lo
+
+              # Option 1 : Firewall activé avec les ports Gazebo
+              sudo ufw --force enable
+              log "Firewall activé avec ports Gazebo"
+
+              # Option 2 : Firewall désactivé (plus simple pour le développement)
+              # sudo ufw disable
+              # log "Firewall désactivé pour Gazebo (développement)"
+
+              # ===== SÉCURITÉ SSH =====
+              log "Installation de fail2ban (protection contre bruteforce SSH)..."
+              retry_command "apt-get install -y fail2ban"
+
+              # Configuration SSH durcie
+              log "Durcissement de la configuration SSH..."
+              cat >> /etc/ssh/sshd_config.d/99-hardening.conf << 'SSHCONF'
+# Désactiver authentification par mot de passe (seules les clés SSH sont autorisées)
+PasswordAuthentication no
+PubkeyAuthentication yes
+PermitRootLogin no
+MaxAuthTries 3
+SSHCONF
+
+              systemctl restart sshd
+              log "SSH durci : authentification par clés uniquement"
 
               # ===== INSTALLATION OUTILS DE COMPILATION =====
               log "Installation des outils de compilation..."
