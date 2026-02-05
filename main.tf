@@ -184,10 +184,18 @@ resource "ovh_cloud_project_instance" "gazebo_instance" {
   # Installation Gazebo Fortress et outils de compilation pour le plugin C++ (bridge REST pour l'app UAV)
   user_data = <<-EOF
               #!/bin/bash
+              set -x  # Mode debug
 
               # ===== CONFIGURATION DU LOGGING =====
-              LOG_FILE="/var/log/user-data.log"
+              LOG_FILE="/var/log/user-data-gazebo.log"
+
+              # Créer le fichier de log avec les bonnes permissions
+              touch "$LOG_FILE"
+              chmod 644 "$LOG_FILE"
+
+              # Rediriger stdout et stderr vers le fichier ET la console
               exec > >(tee -a "$LOG_FILE") 2>&1
+
               echo "======================================"
               echo "User-data script started at $(date)"
               echo "======================================"
