@@ -182,164 +182,160 @@ resource "ovh_cloud_project_instance" "gazebo_instance" {
   # Mise à jour DNS
   # Installation auto des drivers NVIDIA
   # Installation Gazebo Fortress et outils de compilation pour le plugin C++ (bridge REST pour l'app UAV)
-  user_data = <<-EOF
-              #!/bin/bash
-              set -x  # Mode debug
+  user_data = <<EOF
+#!/bin/bash
+set -x  # Mode debug
 
-              # ===== CONFIGURATION DU LOGGING =====
-              LOG_FILE="/var/log/user-data-gazebo.log"
+# ===== CONFIGURATION DU LOGGING =====
+LOG_FILE="/var/log/user-data-gazebo.log"
 
-              # Créer le fichier de log avec les bonnes permissions
-              touch "$LOG_FILE"
-              chmod 644 "$LOG_FILE"
+# Créer le fichier de log avec les bonnes permissions
+touch "$LOG_FILE"
+chmod 644 "$LOG_FILE"
 
-              # Rediriger stdout et stderr vers le fichier ET la console
-              exec > >(tee -a "$LOG_FILE") 2>&1
+# Rediriger stdout et stderr vers le fichier ET la console
+exec > >(tee -a "$LOG_FILE") 2>&1
 
-              echo "======================================"
-              echo "User-data script started at $(date)"
-              echo "======================================"
+echo "======================================"
+echo "User-data script started at $(date)"
+echo "======================================"
 
-              # Fonction pour logger avec timestamp
-              log() {
-                echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*"
-              }
+# Fonction pour logger avec timestamp
+log() {
+  echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*"
+}
 
-              # Fonction pour vérifier et attendre que le DNS fonctionne
-              wait_for_dns() {
-                log "Vérification DNS..."
-                local max_attempts=30
-                local attempt=1
+# Fonction pour vérifier et attendre que le DNS fonctionne
+wait_for_dns() {
+  log "Vérification DNS..."
+  local max_attempts=30
+  local attempt=1
 
-                while [ $attempt -le $max_attempts ]; do
-                  if nslookup google.com > /dev/null 2>&1; then
-                    log "DNS opérationnel (tentative $attempt/$max_attempts)"
-                    return 0
-                  fi
-                  log "DNS non fonctionnel, tentative $attempt/$max_attempts"
-                  sleep 2
-                  attempt=$((attempt + 1))
-                done
+  while [ $attempt -le $max_attempts ]; do
+    if nslookup google.com > /dev/null 2>&1; then
+      log "DNS opérationnel (tentative $attempt/$max_attempts)"
+      return 0
+    fi
+    log "DNS non fonctionnel, tentative $attempt/$max_attempts"
+    sleep 2
+    attempt=$((attempt + 1))
+  done
 
-                log "ERREUR: DNS toujours non fonctionnel après $max_attempts tentatives"
-                return 1
-              }
+  log "ERREUR: DNS toujours non fonctionnel après $max_attempts tentatives"
+  return 1
+}
 
-              # Fonction pour exécuter une commande avec retry
-              retry_command() {
-                local max_attempts=3
-                local attempt=1
-                local cmd="$*"
+# Fonction pour exécuter une commande avec retry
+retry_command() {
+  local max_attempts=3
+  local attempt=1
+  local cmd="$*"
 
-                while [ $attempt -le $max_attempts ]; do
-                  log "Exécution: $cmd (tentative $attempt/$max_attempts)"
-                  if eval "$cmd"; then
-                    log "Succès: $cmd"
-                    return 0
-                  fi
-                  log "Échec: $cmd (tentative $attempt/$max_attempts)"
-                  sleep 5
-                  attempt=$((attempt + 1))
-                done
+  while [ $attempt -le $max_attempts ]; do
+    log "Exécution: $cmd (tentative $attempt/$max_attempts)"
+    if eval "$cmd"; then
+      log "Succès: $cmd"
+      return 0
+    fi
+    log "Échec: $cmd (tentative $attempt/$max_attempts)"
+    sleep 5
+    attempt=$((attempt + 1))
+  done
 
-                log "ERREUR: Échec définitif après $max_attempts tentatives: $cmd"
-                return 1
-              }
+  log "ERREUR: Échec définitif après $max_attempts tentatives: $cmd"
+  return 1
+}
 
-              # ===== CONFIGURATION DNS PERSISTANTE =====
-              log "Configuration DNS persistante via resolved.conf.d..."
+# ===== CONFIGURATION DNS PERSISTANTE =====
+log "Configuration DNS persistante via resolved.conf.d..."
 
-              # Créer le répertoire s'il n'existe pas
-              mkdir -p /etc/systemd/resolved.conf.d
+# Créer le répertoire s'il n'existe pas
+mkdir -p /etc/systemd/resolved.conf.d
 
-              # Créer un fichier de configuration DNS persistant
-              cat > /etc/systemd/resolved.conf.d/custom-dns.conf << 'DNSCONF'
+# Créer un fichier de configuration DNS persistant
+cat > /etc/systemd/resolved.conf.d/custom-dns.conf << 'DNSCONF'
 [Resolve]
 DNS=8.8.8.8 8.8.4.4 1.1.1.1
 FallbackDNS=1.0.0.1
 Domains=~.
 DNSCONF
 
-              log "Configuration DNS créée dans /etc/systemd/resolved.conf.d/custom-dns.conf"
-              log "Redémarrage de systemd-resolved..."
-              systemctl restart systemd-resolved
+log "Configuration DNS créée dans /etc/systemd/resolved.conf.d/custom-dns.conf"
+log "Redémarrage de systemd-resolved..."
+systemctl restart systemd-resolved
 
-              sleep 5
+sleep 5
 
-              # Vérifier que le DNS fonctionne avant de continuer
-              if ! wait_for_dns; then
-                log "ERREUR CRITIQUE: Impossible de configurer le DNS"
-                exit 1
-              fi
+# Vérifier que le DNS fonctionne avant de continuer
+if ! wait_for_dns; then
+  log "ERREUR CRITIQUE: Impossible de configurer le DNS"
+  exit 1
+fi
 
-              # ===== INSTALLATION DES DRIVERS NVIDIA =====
-              log "Installation des drivers NVIDIA..."
-              retry_command "apt-get update"
-              retry_command "apt-get install -y ubuntu-drivers-common"
-              retry_command "ubuntu-drivers install"
+# ===== INSTALLATION DES DRIVERS NVIDIA =====
+log "Installation des drivers NVIDIA..."
+retry_command "apt-get update"
+retry_command "apt-get install -y ubuntu-drivers-common"
+retry_command "ubuntu-drivers install"
 
-              # ===== INSTALLATION DES OUTILS DE BASE =====
-              log "Installation des outils de base..."
-              retry_command "apt-get update"
-              retry_command "apt-get install -y wget curl lsb-release gnupg"
+# ===== INSTALLATION DES OUTILS DE BASE =====
+log "Installation des outils de base..."
+retry_command "apt-get update"
+retry_command "apt-get install -y wget curl lsb-release gnupg"
 
-              # ===== INSTALLATION GAZEBO FORTRESS =====
-              log "Installation de Gazebo Fortress..."
-              retry_command "curl https://packages.osrfoundation.org/gazebo.gpg --output /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg"
+# ===== INSTALLATION GAZEBO FORTRESS =====
+log "Installation de Gazebo Fortress..."
+retry_command "curl https://packages.osrfoundation.org/gazebo.gpg --output /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg"
 
-              echo "deb [arch=$(dpkg --print-architecture) \
-                signed-by=/usr/share/keyrings/pkgs-osrf-archive-keyring.gpg] \
-                https://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" | \
-                sudo tee /etc/apt/sources.list.d/gazebo-stable.list > /dev/null
+echo "deb [arch=$(dpkg --print-architecture) \
+  signed-by=/usr/share/keyrings/pkgs-osrf-archive-keyring.gpg] \
+  https://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" | \
+  sudo tee /etc/apt/sources.list.d/gazebo-stable.list > /dev/null
 
-              retry_command "apt-get update"
-              retry_command "apt-get install -y ignition-fortress"
+retry_command "apt-get update"
+retry_command "apt-get install -y ignition-fortress"
 
-              log "Installation des bibliothèques Gazebo..."
-              retry_command "apt-get install -y libignition-gazebo6-dev libignition-transport11-dev libignition-math6-dev"
+log "Installation des bibliothèques Gazebo..."
+retry_command "apt-get install -y libignition-gazebo6-dev libignition-transport11-dev libignition-math6-dev"
 
-              # ===== INSTALLATION XFCE ET NOMACHINE =====
-              log "Installation de XFCE..."
-              retry_command "apt-get install -y xfce4 xfce4-goodies dbus-x11"
+# ===== INSTALLATION XFCE ET NOMACHINE =====
+log "Installation de XFCE..."
+retry_command "apt-get install -y xfce4 xfce4-goodies dbus-x11"
 
-              log "Installation de NoMachine..."
-              retry_command "wget https://download.nomachine.com/download/9.3/Linux/nomachine_9.3.7_1_amd64.deb"
-              sudo dpkg -i nomachine_9.3.7_1_amd64.deb || log "Erreur dpkg NoMachine (normal, résolution des dépendances...)"
-              retry_command "apt-get install -f -y"
+log "Installation de NoMachine..."
+retry_command "wget https://download.nomachine.com/download/9.3/Linux/nomachine_9.3.7_1_amd64.deb"
+sudo dpkg -i nomachine_9.3.7_1_amd64.deb || log "Erreur dpkg NoMachine (normal, résolution des dépendances...)"
+retry_command "apt-get install -f -y"
 
-              # ===== CONFIGURATION FIREWALL =====
-              log "Configuration firewall..."
+# ===== CONFIGURATION FIREWALL =====
+log "Configuration firewall..."
 
-              # Ports SSH et services
-              sudo ufw allow 22/tcp
-              sudo ufw allow 4000/tcp    # NoMachine
-              sudo ufw allow 8092/tcp    # Application custom
+# Ports SSH et services
+sudo ufw allow 22/tcp
+sudo ufw allow 4000/tcp    # NoMachine
+sudo ufw allow 8092/tcp    # Application custom
 
-              # Ports Gazebo Fortress / Ignition Transport
-              sudo ufw allow 11345/tcp   # Ignition Transport discovery
-              sudo ufw allow 11345/udp   # Ignition Transport discovery (UDP)
-              sudo ufw allow 11346:11355/tcp  # Ignition Transport communication range
-              sudo ufw allow 11346:11355/udp  # Ignition Transport communication range (UDP)
+# Ports Gazebo Fortress / Ignition Transport
+sudo ufw allow 11345/tcp   # Ignition Transport discovery
+sudo ufw allow 11345/udp   # Ignition Transport discovery (UDP)
+sudo ufw allow 11346:11355/tcp  # Ignition Transport communication range
+sudo ufw allow 11346:11355/udp  # Ignition Transport communication range (UDP)
 
-              # Autoriser tout le trafic sur localhost (nécessaire pour Gazebo)
-              sudo ufw allow in on lo
-              sudo ufw allow out on lo
+# Autoriser tout le trafic sur localhost (nécessaire pour Gazebo)
+sudo ufw allow in on lo
+sudo ufw allow out on lo
 
-              # Option 1 : Firewall activé avec les ports Gazebo
-              sudo ufw --force enable
-              log "Firewall activé avec ports Gazebo"
+# Activer le firewall avec les ports Gazebo
+sudo ufw --force enable
+log "Firewall activé avec ports Gazebo"
 
-              # Option 2 : Firewall désactivé (plus simple pour le développement)
-              # sudo ufw disable
-              # log "Firewall désactivé pour Gazebo (développement)"
+# ===== SÉCURITÉ SSH =====
+log "Installation de fail2ban (protection contre bruteforce SSH)..."
+retry_command "apt-get install -y fail2ban"
 
-              # ===== SÉCURITÉ SSH =====
-              log "Installation de fail2ban (protection contre bruteforce SSH)..."
-              retry_command "apt-get install -y fail2ban"
-
-              # Configuration SSH durcie
-              log "Durcissement de la configuration SSH..."
-              cat >> /etc/ssh/sshd_config.d/99-hardening.conf << 'SSHCONF'
+# Configuration SSH durcie
+log "Durcissement de la configuration SSH..."
+cat >> /etc/ssh/sshd_config.d/99-hardening.conf << 'SSHCONF'
 # Désactiver authentification par mot de passe (seules les clés SSH sont autorisées)
 PasswordAuthentication no
 PubkeyAuthentication yes
@@ -347,21 +343,21 @@ PermitRootLogin no
 MaxAuthTries 3
 SSHCONF
 
-              systemctl restart sshd
-              log "SSH durci : authentification par clés uniquement"
+systemctl restart sshd
+log "SSH durci : authentification par clés uniquement"
 
-              # ===== INSTALLATION OUTILS DE COMPILATION =====
-              log "Installation des outils de compilation..."
-              retry_command "apt-get install -y cmake g++ make git"
+# ===== INSTALLATION OUTILS DE COMPILATION =====
+log "Installation des outils de compilation..."
+retry_command "apt-get install -y cmake g++ make git"
 
-              # ===== FIN =====
-              log "======================================"
-              log "User-data script terminé avec succès"
-              log "Redémarrage du serveur..."
-              log "======================================"
+# ===== FIN =====
+log "======================================"
+log "User-data script terminé avec succès"
+log "Redémarrage du serveur..."
+log "======================================"
 
-              reboot
-              EOF
+reboot
+EOF
 }
 
 # 🔹 Récupération du port de l'instance via OpenStack
