@@ -326,8 +326,10 @@ sudo ufw allow in on lo
 sudo ufw allow out on lo
 
 # Activer le firewall avec les ports Gazebo
-sudo ufw --force enable
-log "Firewall activé avec ports Gazebo"
+# sudo ufw --force enable
+# log "Firewall activé avec ports Gazebo"
+# le firewall n'est pas activé => trouver les places de ports nécessaires à Gazebo (ports dynamiques)
+sudo ufw disable
 
 # ===== SÉCURITÉ SSH =====
 log "Installation de fail2ban (protection contre bruteforce SSH)..."
