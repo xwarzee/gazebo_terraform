@@ -253,12 +253,12 @@ resource "ovh_cloud_project_instance" "gazebo_instance" {
               mkdir -p /etc/systemd/resolved.conf.d
 
               # Créer un fichier de configuration DNS persistant
-              cat > /etc/systemd/resolved.conf.d/custom-dns.conf <<EOL
+              cat > /etc/systemd/resolved.conf.d/custom-dns.conf << 'DNSCONF'
 [Resolve]
 DNS=8.8.8.8 8.8.4.4 1.1.1.1
 FallbackDNS=1.0.0.1
 Domains=~.
-EOL
+DNSCONF
 
               log "Configuration DNS créée dans /etc/systemd/resolved.conf.d/custom-dns.conf"
               log "Redémarrage de systemd-resolved..."
