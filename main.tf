@@ -184,48 +184,139 @@ resource "ovh_cloud_project_instance" "gazebo_instance" {
   # Installation Gazebo Fortress et outils de compilation pour le plugin C++ (bridge REST pour l'app UAV)
   user_data = <<-EOF
               #!/bin/bash
-              # Configuration persistante des DNS via systemd-resolved
-              resolvectl dns ens3 8.8.8.8 8.8.4.4 1.1.1.1
-              # Redémarrer systemd-resolved pour appliquer les changements
+
+              # ===== CONFIGURATION DU LOGGING =====
+              LOG_FILE="/var/log/user-data.log"
+              exec > >(tee -a "$LOG_FILE") 2>&1
+              echo "======================================"
+              echo "User-data script started at $(date)"
+              echo "======================================"
+
+              # Fonction pour logger avec timestamp
+              log() {
+                echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*"
+              }
+
+              # Fonction pour vérifier et attendre que le DNS fonctionne
+              wait_for_dns() {
+                log "Vérification DNS..."
+                local max_attempts=30
+                local attempt=1
+
+                while [ $attempt -le $max_attempts ]; do
+                  if nslookup google.com > /dev/null 2>&1; then
+                    log "DNS opérationnel (tentative $attempt/$max_attempts)"
+                    return 0
+                  fi
+                  log "DNS non fonctionnel, tentative $attempt/$max_attempts"
+                  sleep 2
+                  attempt=$((attempt + 1))
+                done
+
+                log "ERREUR: DNS toujours non fonctionnel après $max_attempts tentatives"
+                return 1
+              }
+
+              # Fonction pour exécuter une commande avec retry
+              retry_command() {
+                local max_attempts=3
+                local attempt=1
+                local cmd="$*"
+
+                while [ $attempt -le $max_attempts ]; do
+                  log "Exécution: $cmd (tentative $attempt/$max_attempts)"
+                  if eval "$cmd"; then
+                    log "Succès: $cmd"
+                    return 0
+                  fi
+                  log "Échec: $cmd (tentative $attempt/$max_attempts)"
+                  sleep 5
+                  attempt=$((attempt + 1))
+                done
+
+                log "ERREUR: Échec définitif après $max_attempts tentatives: $cmd"
+                return 1
+              }
+
+              # ===== CONFIGURATION DNS PERSISTANTE =====
+              log "Configuration DNS persistante via resolved.conf.d..."
+
+              # Créer le répertoire s'il n'existe pas
+              mkdir -p /etc/systemd/resolved.conf.d
+
+              # Créer un fichier de configuration DNS persistant
+              cat > /etc/systemd/resolved.conf.d/custom-dns.conf <<EOL
+[Resolve]
+DNS=8.8.8.8 8.8.4.4 1.1.1.1
+FallbackDNS=1.0.0.1
+Domains=~.
+EOL
+
+              log "Configuration DNS créée dans /etc/systemd/resolved.conf.d/custom-dns.conf"
+              log "Redémarrage de systemd-resolved..."
               systemctl restart systemd-resolved
 
-              # Attendre que le DNS soit opérationnel
               sleep 5
 
-              apt-get update
-              apt-get install -y ubuntu-drivers-common
-              ubuntu-drivers install
-              apt-get update
-              apt-get install -y wget curl lsb-release gnupg
-              curl https://packages.osrfoundation.org/gazebo.gpg \
-                --output /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg
+              # Vérifier que le DNS fonctionne avant de continuer
+              if ! wait_for_dns; then
+                log "ERREUR CRITIQUE: Impossible de configurer le DNS"
+                exit 1
+              fi
+
+              # ===== INSTALLATION DES DRIVERS NVIDIA =====
+              log "Installation des drivers NVIDIA..."
+              retry_command "apt-get update"
+              retry_command "apt-get install -y ubuntu-drivers-common"
+              retry_command "ubuntu-drivers install"
+
+              # ===== INSTALLATION DES OUTILS DE BASE =====
+              log "Installation des outils de base..."
+              retry_command "apt-get update"
+              retry_command "apt-get install -y wget curl lsb-release gnupg"
+
+              # ===== INSTALLATION GAZEBO FORTRESS =====
+              log "Installation de Gazebo Fortress..."
+              retry_command "curl https://packages.osrfoundation.org/gazebo.gpg --output /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg"
+
               echo "deb [arch=$(dpkg --print-architecture) \
                 signed-by=/usr/share/keyrings/pkgs-osrf-archive-keyring.gpg] \
                 https://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" | \
                 sudo tee /etc/apt/sources.list.d/gazebo-stable.list > /dev/null
-              apt-get update
-              apt-get install -y ignition-fortress 
-              # For ignition-fortress, check https://github.com/gazebosim/gz-fortress/blob/main/CMakeLists.txt
-              apt-get install -y \
-                libignition-gazebo6-dev \
-                libignition-transport11-dev \
-                libignition-math6-dev
-              apt-get install -y xfce4 xfce4-goodies dbus-x11
-              wget https://download.nomachine.com/download/9.3/Linux/nomachine_9.3.7_1_amd64.deb    
-              sudo dpkg -i nomachine_9.3.7_1_amd64.deb                                         
-              sudo apt-get install -f -y
+
+              retry_command "apt-get update"
+              retry_command "apt-get install -y ignition-fortress"
+
+              log "Installation des bibliothèques Gazebo..."
+              retry_command "apt-get install -y libignition-gazebo6-dev libignition-transport11-dev libignition-math6-dev"
+
+              # ===== INSTALLATION XFCE ET NOMACHINE =====
+              log "Installation de XFCE..."
+              retry_command "apt-get install -y xfce4 xfce4-goodies dbus-x11"
+
+              log "Installation de NoMachine..."
+              retry_command "wget https://download.nomachine.com/download/9.3/Linux/nomachine_9.3.7_1_amd64.deb"
+              sudo dpkg -i nomachine_9.3.7_1_amd64.deb || log "Erreur dpkg NoMachine (normal, résolution des dépendances...)"
+              retry_command "apt-get install -f -y"
+
+              # ===== CONFIGURATION FIREWALL =====
+              log "Configuration firewall..."
               sudo ufw allow 22/tcp
               sudo ufw allow 4000/tcp
               sudo ufw allow 8092/tcp
-              # sudo ufw enable
-              # ufw disable to use ign gazebo
               sudo ufw disable
-              # install CMake and compilers
-              apt-get install -y \
-                cmake \
-                g++ \
-                make \
-                git
+              log "Firewall désactivé pour Gazebo"
+
+              # ===== INSTALLATION OUTILS DE COMPILATION =====
+              log "Installation des outils de compilation..."
+              retry_command "apt-get install -y cmake g++ make git"
+
+              # ===== FIN =====
+              log "======================================"
+              log "User-data script terminé avec succès"
+              log "Redémarrage du serveur..."
+              log "======================================"
+
               reboot
               EOF
 }
