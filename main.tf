@@ -352,6 +352,28 @@ log "SSH durci : authentification par clés uniquement"
 log "Installation des outils de compilation..."
 retry_command "apt-get install -y cmake g++ make git"
 
+
+# ==== ROS2 INSTALLATION ====
+log "Installation ROS2..."
+apt install software-properties-common curl
+curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key \
+  -o /usr/share/keyrings/ros-archive-keyring.gpg
+echo "deb [arch=$(dpkg --print-architecture) \
+  signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] \
+  http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" \
+  | sudo tee /etc/apt/sources.list.d/ros2.list
+
+apt update
+apt install ros-humble-desktop      # ou ros-humble-ros-base (sans GUI)
+
+# ==== Ignition ↔ ROS2 Bridge INSTALLATION ====
+log "Installation Ignition ↔ ROS2 Bridge..."
+apt install \
+  ros-humble-ros-gz-bridge \
+  ros-humble-ros-gz-sim \
+  ros-humble-ros-gz-interfaces \
+  ros-humble-tf2-msgs
+
 # ===== FIN =====
 log "======================================"
 log "User-data script terminé avec succès"
