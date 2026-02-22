@@ -364,15 +364,20 @@ echo "deb [arch=$(dpkg --print-architecture) \
   | sudo tee /etc/apt/sources.list.d/ros2.list
 
 apt update
-apt install ros-humble-desktop      # ou ros-humble-ros-base (sans GUI)
+apt install ros-humble-desktop -y     # ou ros-humble-ros-base (sans GUI)
 
 # ==== Ignition ↔ ROS2 Bridge INSTALLATION ====
 log "Installation Ignition ↔ ROS2 Bridge..."
-apt install \
+apt install -y \
   ros-humble-ros-gz-bridge \
   ros-humble-ros-gz-sim \
   ros-humble-ros-gz-interfaces \
   ros-humble-tf2-msgs
+
+# ==== colon INSTALLATION ====
+log "Installation python3-colcon..."
+apt install python3-colcon-core
+apt install python3-colcon-common-extensions
 
 # ===== FIN =====
 log "======================================"
