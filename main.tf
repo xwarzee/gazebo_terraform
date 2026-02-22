@@ -376,8 +376,8 @@ apt install -y \
 
 # ==== colon INSTALLATION ====
 log "Installation python3-colcon..."
-apt install python3-colcon-core
-apt install python3-colcon-common-extensions
+apt install -y python3-colcon-core
+apt install -y python3-colcon-common-extensions
 
 # ===== FIN =====
 log "======================================"
