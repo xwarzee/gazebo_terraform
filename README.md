@@ -1,17 +1,21 @@
-# Gazebo ignition fortress deployed to OVHcloud
-Terraform project to create an ovhcloud instance with a GPU to execute simulations with Gazebo ignition fortress
+# Gazebo Ignition Fortress on OVHcloud
 
-# Manual settings to use Nomachine
+Terraform project to provision an OVHcloud GPU instance running Gazebo Ignition Fortress, ROS2 Humble, and NoMachine for remote desktop access.
 
-## Sur le mac
+## Stack
 
-``` 
-> scp /Users/scrumconseil/.ssh/id_ed25519_nomachine.pub ubuntu@IP_ADDRESS_GEZABO_SERVER:/home/ubuntu/.ssh/id_ed25519_nomachine_client.pub
-```
+- **Cloud**: OVHcloud Public Cloud (GRA11), GPU flavor `l4-90`
+- **OS**: Ubuntu 22.04
+- **Simulation**: Gazebo Ignition Fortress + Ignition-ROS2 bridge
+- **Remote desktop**: XFCE + NoMachine (port 4000)
+- **IaC**: Terraform (OVH + OpenStack providers)
+- **CI/CD**: Jenkins pipeline
 
-## Sur le serveur
-```
-> mkdir -p /home/ubuntu/.nx/config
-> cat /home/ubuntu/.ssh/id_ed25519_nomachine_client.pub >> /home/ubuntu/.nx/config/authorized.crt
-> chmod 0600 /home/ubuntu/.nx/config/authorized.crt
-```
+## Documentation
+
+See [docs/USER_MANUAL.md](docs/USER_MANUAL.md) for full instructions on:
+
+- Prerequisites (OVH API credentials, SSH keys)
+- Manual provisioning step by step
+- Jenkins pipeline setup and usage
+- Known issues and fixes
