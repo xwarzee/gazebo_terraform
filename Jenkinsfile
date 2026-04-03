@@ -38,7 +38,7 @@ pipeline {
         OS_IDENTITY_API_VERSION = '3'
         OS_USER_DOMAIN_NAME = 'Default'
         OS_PROJECT_DOMAIN_NAME = 'Default'
-        OS_TENANT_NAME = '9376721598096746'
+        OS_TENANT_NAME = credentials('OS_TENANT_NAME')
         OS_REGION_NAME = 'GRA11'
     }
 

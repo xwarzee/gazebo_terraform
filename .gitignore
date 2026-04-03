@@ -2,3 +2,7 @@
 .terraform.lock.hcl
 tfplan
 tfplan_destroy
+openrc.sh
+*.tfstate
+*.tfstate.backup
+*.tfstate.*.backup
