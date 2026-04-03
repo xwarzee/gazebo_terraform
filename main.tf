@@ -92,7 +92,7 @@ locals {
 resource "ovh_cloud_project_ssh_key" "my_key" {
   service_name = var.project_id_var # projet Gazebo
   name         = "gazebo_key_ed25519"
-  public_key   = file("${path.module}/id_ed25519.pub")
+  public_key   = trimspace(file("${path.module}/id_ed25519.pub"))
 
   lifecycle {
     ignore_changes = [public_key]
