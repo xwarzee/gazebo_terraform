@@ -139,7 +139,8 @@ pipeline {
                         -target=ovh_cloud_project_instance.gazebo_instance \
                         -target=ovh_cloud_project_gateway.gateway \
                         -target=ovh_cloud_project_network_private_subnet.private_subnet \
-                        -target=ovh_cloud_project_network_private.private_net --auto-approve
+                        -target=ovh_cloud_project_network_private.private_net \
+                        -target=ovh_cloud_project_ssh_key.my_key  --auto-approve
                 '''
             }
         }
